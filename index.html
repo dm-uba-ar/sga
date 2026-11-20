@@ -1,0 +1,202 @@
+<html>
+<head>
+<title>Seminario de Geometria Algebraica</title>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<meta content="utf-8" http-equiv="encoding">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"> </script>
+<script>
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxb5gh0u2xb5ZAPXNAx-gLiOuk3evSUlfWpn7fTdB5DSeMmR4ARHzh__GbCTJPUYaP0/exec";
+var charlas = {};
+var abstracts = {};
+var isAppendMode = false;
+
+function load_data(year, cuat, append = false) {
+    if (cuat.toString().length == 1) { cuat = "0" + cuat; }
+    isAppendMode = append; 
+    $.getJSON(SCRIPT_URL + "?callback=?",
+              {year:year, cuat:cuat},
+              function (data) { 
+                charlas = data[0];
+                abstracts = data[1];
+                loadVar(year + "" + cuat);
+            });
+}
+
+</script>
+<body style="font-size: 14px; font-family: arial; overflow-y: scroll;" bgcolor="lightgoldenrodyellow">
+
+
+<p align="center">
+<span style="font-size: 25px; font-weight: bold;">Seminario de Geometria Algebraica </span>
+
+<br>
+
+<span style="font-size: 20px; font-weight: bold;">Buenos Aires, Argentina</span>
+</p>
+
+<br>
+
+<p>
+Coordinadores: Fernando Cukierman, Carlos Di Fiore, <a href = "mailto: cmassri@dm.uba.ar">C&eacute;sar Massri</a>, Federico Quallbrunn
+<br>
+</p>
+
+<hr>
+
+<p>
+<span style="font-size: 16px; font-weight: bold;">Cronograma de charlas</span>
+</p>
+
+<ul>
+<li> Cuatrimestre en curso:
+<script type="text/javascript">
+var d = new Date();
+var year=d.getFullYear();
+var cuat=1;
+if(d.getMonth()>6){cuat=2;} // 7 es agosto
+document.write("<a href=\"#\" onclick='load_data(" + year + "," + cuat + ")'>" + cuat + "/" + year + "</a>, ");
+</script>
+</li>
+
+<li>
+Cuatrimestres anteriores:
+<script type="text/javascript">
+var d = new Date();
+var year=d.getFullYear();
+if(d.getMonth()>6){
+	document.write("<a href=\"#\" onclick='load_data(" + year + ",1)'>1/" + year + "</a>, ");
+}
+
+for (var i=year-1;i>2005;i--){
+	for (var j=2; j>0; j--) {
+		var cuat = j + "/" + i;
+		if (i<=1908) {
+			document.write(cuat + ", ");
+		} else {
+			document.write("<a href=\"#\" onclick='load_data(" + i + "," + j + ")'>" + cuat + "</a>, ");
+		}
+	}
+}
+document.write("<a href='#' onclick='loadAll()'>All</a>");
+</script>
+</li></ul>
+
+
+
+
+<div id="fecha" style="font-size: 16px;"></div>
+
+<br>
+
+Aula de Seminarios, DM, FCEyN, UBA
+
+<br>
+
+Viernes 18 hs
+
+<br>
+
+<noscript>
+	<br><ul><font color="red" size="4">
+		You should have Javascript enabled on your browser to properly see this website.
+	</font></ul>
+</noscript>
+
+
+<div id='show' style="display: block"></div>
+
+
+<script type="text/javascript">
+
+
+function Hideshow(which){
+	if (!document.getElementById) {
+		return;
+	}
+	if (which.style.display=="none") {
+		which.style.display="block";
+	} else {
+		which.style.display="none";
+	}
+}
+
+async function loadAll() {
+    // Feedback visual inmediato
+    document.getElementById('show').innerHTML = "<p><b>Cargando el historial completo del seminario...</b></p>";
+    document.getElementById('fecha').innerHTML = "Todas las charlas";
+    
+    var d = new Date();
+    var currentYear = d.getFullYear();
+    isAppendMode = true; // Activamos el modo acumulativo
+
+    for (var i = currentYear; i > 2005; i--) {
+        for (var j = 2; j > 0; j--) {
+            // Saltamos cuatrimestres futuros si estamos en el año actual
+            if (i == currentYear && j == 2 && d.getMonth() <= 6) continue;
+
+            var cuatStr = (j < 10) ? "0" + j : j;
+
+            // Esperamos a que la petición termine antes de pasar al siguiente cuatrimestre
+            await new Promise((resolve) => {
+                $.getJSON(SCRIPT_URL + "?callback=?", {year: i, cuat: cuatStr}, function(data) {
+                    charlas = data[0];
+                    abstracts = data[1];
+                    loadVar(i + "" + cuatStr);
+                    resolve();
+                });
+            });
+        }
+    }
+}
+
+function loadVar(wich) {
+    // Si no es modo append, limpiamos el contenedor
+    if (!isAppendMode) {
+        document.getElementById('show').innerHTML = "";
+        var label = (wich.substr(4,2) == "01") ? "Primer cuatrimestre " : "Segundo cuatrimestre ";
+        document.getElementById('fecha').innerHTML = label + wich.substr(0,4);
+    } else {
+        // En modo "All", agregamos un encabezado para separar cuatrimestres
+        var subLabel = (wich.substr(4,2) == "01") ? "1er Cuat. " : "2do Cuat. ";
+        document.getElementById('show').innerHTML += "<div style='margin-top:20px; color:#666; font-weight:bold; border-bottom:1px solid #ccc; width:600px;'>" + subLabel + wich.substr(0,4) + "</div>";
+    }
+
+    for (var i=40; i>0; i--) {
+        var num = wich + (i < 10 ? "0" + i : i);
+        try {
+            if (charlas[num].length < 2) continue;
+            var textoVar = charlas[num];
+            var texto = "<ul>";
+            if(Math.abs(Number(textoVar.substr(0,1)))<=3){ texto += "<li>"; }
+            texto += textoVar;
+
+            if (abstracts[num].length > 10) { 
+                texto += "<br><span><a href=\"javascript:void()\" onclick=\"Hideshow(document.getElementById('abs" + num + "'))\">Abstract</a></span><br><ul><ul>";
+                texto += "<span><div id='abs" + num + "' style=\"font-size: 14; background-color:Khaki; width:600px; display: none\"></div></span></ul></ul>";
+            }
+            texto += "</ul>";
+            document.getElementById('show').innerHTML += texto;
+            
+            if (abstracts[num].length > 10) { 
+                document.getElementById("abs" + num).innerHTML = abstracts[num];
+            }
+        } catch(err) {}
+    }
+}
+
+var d = new Date();
+var year=d.getFullYear();
+var cuat= "01";
+if(d.getMonth()>6){ cuat = "02";}
+
+$(document).ready(function() { load_data(year, cuat); });
+
+</script>
+
+
+</body>
+</html>
